@@ -1,4 +1,5 @@
 import React from 'react'
+import { Route, Routes } from 'react-router-dom'
 import Header from './Header'
 import Main from './Main'
 import Footer from './Footer'
@@ -7,8 +8,12 @@ import ConfirmPopup from './ConfirmPopup'
 import EditProfilePopup from './EditProfilePopup'
 import EditAvatarPopup from './EditAvatarPopup'
 import ImagePopup from './ImagePopup'
+import Register from './Register'
 import { api } from '../utils/api'
 import { CurrentUserContext } from '../context/CurrentUserContext'
+import ProtectRouteElement from './ProtectedRoute'
+import Login from './Login'
+import * as auth from '../utils/Auth'
 
 function App() {
   const [isEditAvatarPopupOpen, setEditAvatarPopupOpen] = React.useState(false)
@@ -19,6 +24,8 @@ function App() {
   const [selectedCard, setSelectedCard] = React.useState({})
   const [currentUser, setCurrentUser] = React.useState({})
   const [cards, setCards] = React.useState([])
+  const [loggedIn, setLoggedIn] = React.useState(false)
+  
 
   React.useEffect(() => {
     Promise.all([api.getUserInfo(), api.getInitialCards()])
@@ -114,44 +121,66 @@ function App() {
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className='page'>
-        <Header />
-        <Main
-          onCardDelete={handleTrashIconClick}
-          onCardLike={handleCardLike}
-          onEditAvatar={handleEditAvatarClick}
-          onAddPlace={handleAddPlaceClick}
-          onEditProfile={handleEditProfileClick}
-          onImageClick={handleImageClick}
-          onTrashIconClick={handleTrashIconClick}
-          cards={cards}
+        <Header 
+          loggedIn={loggedIn}
         />
-        <Footer />
-        <EditProfilePopup
+        <Routes>
+          <Route
+            path='/'
+            element={
+              <ProtectRouteElement
+                element={Main}
+                onCardDelete={handleTrashIconClick}
+                onCardLike={handleCardLike}
+                onEditAvatar={handleEditAvatarClick}
+                onAddPlace={handleAddPlaceClick}
+                onEditProfile={handleEditProfileClick}
+                onImageClick={handleImageClick}
+                onTrashIconClick={handleTrashIconClick}
+                cards={cards}
+                loggedIn={loggedIn}
+              />}
+          />
+          <Route 
+            path='/sing-up'
+            element={
+            <Register
+              
+            />}
+          />
+          <Route
+            path='sing-in'
+            element={
+              <Login/>
+            }
+          />
+        </Routes>
+        {loggedIn && <Footer />}
+        {loggedIn && <EditProfilePopup
           isOpen={isEditProfilePopupOpen}
           onClose={closeAllPopups}
           onUpdateUser={handleUpdateUser}
-        />
-        <AddPlacePopup
+        />}
+        {loggedIn && <AddPlacePopup
           isOpen={isAddPlacePopupOpen}
           onClose={closeAllPopups}
           onAddPlace={handleAddPlaceSubmit}
-        />
-        <EditAvatarPopup
+        />}
+        {loggedIn && <EditAvatarPopup
           isOpen={isEditAvatarPopupOpen}
           onClose={closeAllPopups}
           onUpdateAvatar={handleUpdateAvatar}
-        >
-        </EditAvatarPopup>
-        <ConfirmPopup
+        />}
+        {loggedIn && <ConfirmPopup
           isOpen={isConfirmPopupOpen}
           onClose={closeAllPopups}
           onSubmit={handleCardDelete}
-        />
-        <ImagePopup
+        />}
+        {loggedIn && <ImagePopup
           card={selectedCard}
           isOpen={isImagePopupOpen}
           onClose={closeAllPopups}
-        />
+        />}
       </div>
     </CurrentUserContext.Provider>
   );
