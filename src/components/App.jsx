@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, Routes } from 'react-router-dom'
+import { Route, Routes, useNavigate } from 'react-router-dom'
 import Header from './Header'
 import Main from './Main'
 import Footer from './Footer'
@@ -13,6 +13,7 @@ import { api } from '../utils/api'
 import { CurrentUserContext } from '../context/CurrentUserContext'
 import ProtectRouteElement from './ProtectedRoute'
 import Login from './Login'
+import InfoToolTip from './InfoToolTip'
 import * as auth from '../utils/Auth'
 
 function App() {
@@ -21,24 +22,57 @@ function App() {
   const [isEditProfilePopupOpen, setEditProfilePopupOpen] = React.useState(false)
   const [isImagePopupOpen, setImagePopupOpen] = React.useState(false)
   const [isConfirmPopupOpen, setConfirmPopupOpen] = React.useState(false)
+  const [isInfoToolTipOpen, setInfoToolTipOpen] = React.useState(false)
   const [selectedCard, setSelectedCard] = React.useState({})
   const [currentUser, setCurrentUser] = React.useState({})
   const [cards, setCards] = React.useState([])
-  const [loggedIn, setLoggedIn] = React.useState(false)
-  
+  const [loggedIn, setLoggedIn] = React.useState(true)
+  const [valueRegister, setValueRegister] = React.useState({})
+  const [errorMessage, setErrorMessage] = React.useState('')
+
+  const navigate = useNavigate()
+
+  function handleRegister() {
+    if(valueRegister.email || valueRegister.password){
+      auth
+        .register(valueRegister)
+        .then(() => {
+          handleInfoToolTipClick()
+          navigate('/sign-in', { replace: true });
+          setValueRegister({});
+        })
+        .catch((err) => {
+           return err.then((res) => handleInfoToolTipError(res)) 
+        })
+    }
+  }
+
 
   React.useEffect(() => {
-    Promise.all([api.getUserInfo(), api.getInitialCards()])
+    if (loggedIn) {
+      Promise.all([api.getUserInfo(), api.getInitialCards()])
       .then(([user, cards]) => {
         setCurrentUser(user)
         setCards(cards)
       })
       .catch(err => console.log(err))
-  }, [])
+    }
+  }, [loggedIn])
+
+  console.log(errorMessage)
 
   function handleImageClick(card) {
     setSelectedCard(card)
     setImagePopupOpen(true)
+  }
+
+  function handleInfoToolTipClick() {
+    setInfoToolTipOpen(true)
+  }
+
+  function handleInfoToolTipError({err, message}) {
+    setInfoToolTipOpen(true)
+    setErrorMessage(message || err);
   }
 
   function handleEditProfileClick() {
@@ -59,6 +93,7 @@ function App() {
     setEditAvatarPopupOpen(false)
     setImagePopupOpen(false)
     setConfirmPopupOpen(false)
+    setInfoToolTipOpen(false)
     setTimeout(() => {
       setSelectedCard({})
     }, 500)
@@ -121,7 +156,7 @@ function App() {
   return (
     <CurrentUserContext.Provider value={currentUser}>
       <div className='page'>
-        <Header 
+        <Header
           loggedIn={loggedIn}
         />
         <Routes>
@@ -141,17 +176,19 @@ function App() {
                 loggedIn={loggedIn}
               />}
           />
-          <Route 
+          <Route
             path='/sing-up'
             element={
-            <Register
-              
-            />}
+              <Register
+                onSubmit={handleRegister}
+                value={valueRegister}
+                setValue={setValueRegister}
+              />}
           />
           <Route
             path='sing-in'
             element={
-              <Login/>
+              <Login />
             }
           />
         </Routes>
@@ -181,6 +218,12 @@ function App() {
           isOpen={isImagePopupOpen}
           onClose={closeAllPopups}
         />}
+        <InfoToolTip
+          error={errorMessage}
+          name='tool-tip'
+          isOpen={isInfoToolTipOpen}
+          onClose={closeAllPopups}
+        />
       </div>
     </CurrentUserContext.Provider>
   );

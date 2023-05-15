@@ -11,29 +11,31 @@ function Header({ loggedIn }) {
   return (
     <>
       <header className="header">
-        <img
+        <Link to={'/'}>
+          <img
           src={logo}
           alt="Логотип проекта Место"
           className="header__logo"
         />
-        <div className="header__buttons-wrapper">
-          {
-            loggedIn
-              ? (
-                <>
-                  <p className='header__email'>exsample@email.ru</p>
-                  <button className='header__btn'>Выйти</button>
-                </>
-              )
-              : (
-                <>
-                  <Link to={path} className='header__link'>{linkName}</Link>
-                </>
-              )
-          }
+        </Link>
+      <div className="header__buttons-wrapper">
+        {
+          loggedIn
+            ? (
+              <>
+                <p className='header__email'>exsample@email.ru</p>
+                <button className='header__btn'>Выйти</button>
+              </>
+            )
+            : (
+              <>
+                <Link to={path} className='header__link'>{linkName}</Link>
+              </>
+            )
+        }
 
-        </div>
-      </header>
+      </div>
+    </header>
     </>
   )
 }
