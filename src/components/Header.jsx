@@ -2,11 +2,11 @@ import logo from '../images/svg/logo.svg';
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom'
 
-function Header({ loggedIn }) {
+function Header({ loggedIn, email, handleLogout}) {
   const location = useLocation()
 
-  const path = location.pathname === '/sing-in' ? '/sing-up' : '/sing-in'
-  const linkName = location.pathname === '/sing-in' ? 'Регистрация' : 'Войти'
+  const path = location.pathname === '/sign-in' ? '/sign-up' : '/sign-in'
+  const linkName = location.pathname === '/sign-in' ? 'Регистрация' : 'Войти'
 
   return (
     <>
@@ -23,8 +23,8 @@ function Header({ loggedIn }) {
           loggedIn
             ? (
               <>
-                <p className='header__email'>exsample@email.ru</p>
-                <button className='header__btn'>Выйти</button>
+                <p className='header__email'>{email}</p>
+                <button className='header__btn' onClick={handleLogout}>Выйти</button>
               </>
             )
             : (

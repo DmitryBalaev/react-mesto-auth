@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, Routes, useNavigate } from 'react-router-dom'
+import { Route, Routes, useNavigate, Navigate} from 'react-router-dom'
 import Header from './Header'
 import Main from './Main'
 import Footer from './Footer'
@@ -26,14 +26,17 @@ function App() {
   const [selectedCard, setSelectedCard] = React.useState({})
   const [currentUser, setCurrentUser] = React.useState({})
   const [cards, setCards] = React.useState([])
-  const [loggedIn, setLoggedIn] = React.useState(true)
+  const [loggedIn, setLoggedIn] = React.useState(false)
   const [valueRegister, setValueRegister] = React.useState({})
+  const [valueLogin, setValueLogin] = React.useState({})
+  const [userEmail, setUserEmail] = React.useState('')
   const [errorMessage, setErrorMessage] = React.useState('')
 
   const navigate = useNavigate()
 
   function handleRegister() {
-    if(valueRegister.email || valueRegister.password){
+    if (valueRegister.email || valueRegister.password) {
+      console.log(valueRegister)
       auth
         .register(valueRegister)
         .then(() => {
@@ -42,24 +45,65 @@ function App() {
           setValueRegister({});
         })
         .catch((err) => {
-           return err.then((res) => handleInfoToolTipError(res)) 
+          return err.then((res) => handleInfoToolTipError(res))
         })
     }
   }
+
+  function handleLogout () {
+    localStorage.removeItem('jwt')
+    setLoggedIn(false)
+    navigate('/sign-in', {replace: true})
+  }
+
+  function handleLogin() {
+    if (valueLogin.email || valueLogin.password) {
+      auth
+        .login(valueLogin)
+        .then((res) => {
+          if (res.token) {
+            localStorage.setItem('jwt', res.token)
+            navigate('/', { replace: true })
+            setLoggedIn(true)
+            setUserEmail(valueLogin.email)
+            setValueLogin({})
+          }
+        })
+        .catch((err) => {
+          return err.then((res) => handleInfoToolTipError(res))
+        })
+    }
+  }
+
+  function checkToken() {
+    const jwt = localStorage.getItem('jwt')
+
+    if(jwt) {
+      auth
+      .checkToken(jwt)
+      .then((res) => {
+        if(res){
+          setLoggedIn(true)
+        }
+      })
+    }
+  }
+
+  React.useEffect(() => {
+    checkToken()
+  }, [])
 
 
   React.useEffect(() => {
     if (loggedIn) {
       Promise.all([api.getUserInfo(), api.getInitialCards()])
-      .then(([user, cards]) => {
-        setCurrentUser(user)
-        setCards(cards)
-      })
-      .catch(err => console.log(err))
+        .then(([user, cards]) => {
+          setCurrentUser(user)
+          setCards(cards)
+        })
+        .catch(err => console.log(err))
     }
   }, [loggedIn])
-
-  console.log(errorMessage)
 
   function handleImageClick(card) {
     setSelectedCard(card)
@@ -70,7 +114,7 @@ function App() {
     setInfoToolTipOpen(true)
   }
 
-  function handleInfoToolTipError({err, message}) {
+  function handleInfoToolTipError({ err, message }) {
     setInfoToolTipOpen(true)
     setErrorMessage(message || err);
   }
@@ -158,6 +202,8 @@ function App() {
       <div className='page'>
         <Header
           loggedIn={loggedIn}
+          email={userEmail}
+          handleLogout={handleLogout}
         />
         <Routes>
           <Route
@@ -177,19 +223,28 @@ function App() {
               />}
           />
           <Route
-            path='/sing-up'
+            path='/sign-up'
             element={
-              <Register
+              loggedIn ? (
+                <Navigate to='/' replace />
+              ) :
+              (<Register
                 onSubmit={handleRegister}
                 value={valueRegister}
                 setValue={setValueRegister}
-              />}
+              />)}
           />
           <Route
-            path='sing-in'
+            path='/sign-in'
             element={
-              <Login />
-            }
+              loggedIn ? (
+                <Navigate to="/" replace/>
+              ) :(
+              <Login
+                onSubmit={handleLogin}
+                value={valueLogin}
+                setValue={setValueLogin}
+              />)}
           />
         </Routes>
         {loggedIn && <Footer />}
