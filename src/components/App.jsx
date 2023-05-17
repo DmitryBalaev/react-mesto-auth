@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, Routes, useNavigate, Navigate} from 'react-router-dom'
+import { Route, Routes, useNavigate, Navigate } from 'react-router-dom'
 import Header from './Header'
 import Main from './Main'
 import Footer from './Footer'
@@ -36,7 +36,6 @@ function App() {
 
   function handleRegister() {
     if (valueRegister.email || valueRegister.password) {
-      console.log(valueRegister)
       auth
         .register(valueRegister)
         .then(() => {
@@ -50,10 +49,10 @@ function App() {
     }
   }
 
-  function handleLogout () {
+  function handleLogout() {
     localStorage.removeItem('jwt')
     setLoggedIn(false)
-    navigate('/sign-in', {replace: true})
+    navigate('/sign-in', { replace: true })
   }
 
   function handleLogin() {
@@ -78,21 +77,23 @@ function App() {
   function checkToken() {
     const jwt = localStorage.getItem('jwt')
 
-    if(jwt) {
+    if (jwt) {
       auth
-      .checkToken(jwt)
-      .then((res) => {
-        if(res){
-          setLoggedIn(true)
-        }
-      })
+        .checkToken(jwt)
+        .then((res) => {
+          if (res) {
+            setUserEmail(res.data.email)
+            navigate('/', { replace: true })
+            setLoggedIn(true)
+          }
+        })
+        .catch((err) => console.log(err))
     }
   }
 
   React.useEffect(() => {
     checkToken()
   }, [])
-
 
   React.useEffect(() => {
     if (loggedIn) {
@@ -114,9 +115,9 @@ function App() {
     setInfoToolTipOpen(true)
   }
 
-  function handleInfoToolTipError({ err, message }) {
+  function handleInfoToolTipError({ error, message }) {
     setInfoToolTipOpen(true)
-    setErrorMessage(message || err);
+    setErrorMessage(message || error);
   }
 
   function handleEditProfileClick() {
@@ -228,23 +229,23 @@ function App() {
               loggedIn ? (
                 <Navigate to='/' replace />
               ) :
-              (<Register
-                onSubmit={handleRegister}
-                value={valueRegister}
-                setValue={setValueRegister}
-              />)}
+                (<Register
+                  onSubmit={handleRegister}
+                  value={valueRegister}
+                  setValue={setValueRegister}
+                />)}
           />
           <Route
             path='/sign-in'
             element={
               loggedIn ? (
-                <Navigate to="/" replace/>
-              ) :(
-              <Login
-                onSubmit={handleLogin}
-                value={valueLogin}
-                setValue={setValueLogin}
-              />)}
+                <Navigate to="/" replace />
+              ) : (
+                <Login
+                  onSubmit={handleLogin}
+                  value={valueLogin}
+                  setValue={setValueLogin}
+                />)}
           />
         </Routes>
         {loggedIn && <Footer />}

@@ -1,7 +1,6 @@
 const BASE_URL = 'https://auth.nomoreparties.co'
 
 function handleResponse(res) {
-  console.log(res)
   return res.ok ? res.json() : Promise.reject(res.json().then(res => res))
 }
 
